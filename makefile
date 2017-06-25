@@ -1,7 +1,7 @@
 all: hello
 
 hello: hello.o
-	g++ -o hello hello.o -lX11 -lGL
+	g++ -o hello hello.o -Wall -Iinclude -lGL -lGLU -lX11
 
 
 hello.o: hello.cpp
