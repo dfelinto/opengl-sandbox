@@ -1,7 +1,7 @@
-
 #include "opengl.h"
 #include <unistd.h>
 #include <iostream>
+#include <sstream>
 
 #include "utils.h"
 #include "shaders.h"
@@ -10,34 +10,26 @@
 #define GLX_CONTEXT_MINOR_VERSION_ARB		0x2092
 typedef GLXContext (*GLXCREATECONTEXTATTRIBSARBPROC)(Display*, GLXFBConfig, GLXContext, Bool, const int*);
 
-#define LOG(type) std::cout
-
 
 static void shader_print_errors(const char *task, const char *log, const char *code)
 {
-#if 0
-	LOG(ERROR) << "Shader: " << task << " error:";
-	LOG(ERROR) << "===== shader string ====";
+	std::cerr << "Shader: " << task << " error:" << std::endl;
+	std::cerr << "===== shader string ====" << std::endl;
 
-	stringstream stream(code);
-	string partial;
+	std::stringstream stream(code);
+	std::string partial;
 
 	int line = 1;
-	while(getline(stream, partial, '\n')) {
-		if(line < 10) {
-			LOG(ERROR) << " " << line << " " << partial;
+	while (getline(stream, partial, '\n')) {
+		if (line < 10) {
+			std::cerr << " " << line << " " << partial << std::endl;
 		}
 		else {
-			LOG(ERROR) << line << " " << partial;
+			std::cerr << line << " " << partial << std::endl;
 		}
 		line++;
 	}
-	LOG(ERROR) << log;
-#else
-	(void)task;
-	(void)log;
-	(void)code;
-#endif
+	std::cerr << log << std::endl;
 }
 
 static int bind_shader(const char *fragment_shader, const char *vertex_shader)
@@ -51,8 +43,14 @@ static int bind_shader(const char *fragment_shader, const char *vertex_shader)
 		const char *source;
 		GLenum type;
 	} shaders[2] = {
-	    {vertex_shader, GL_VERTEX_SHADER},
-	    {fragment_shader, GL_FRAGMENT_SHADER}
+	    {
+				.source = vertex_shader,
+				.type = GL_VERTEX_SHADER,
+			},
+	    {
+				.source = fragment_shader,
+				.type = GL_FRAGMENT_SHADER,
+			}
     };
 
 	program = glCreateProgram();
@@ -60,14 +58,21 @@ static int bind_shader(const char *fragment_shader, const char *vertex_shader)
 	for(int i = 0; i < 2; i++) {
 		GLuint shader = glCreateShader(shaders[i].type);
 
-		glShaderSource(shader, 1, &shaders[i].source, NULL);
+		// Read shader file into one string
+		std::string shaderSource;
+		if ( !readFileIntoString( shaders[i].source, shaderSource ) ) {
+			return 0;
+		}
+		const GLchar *shader_source[] = { shaderSource.c_str() };
+
+		glShaderSource(shader, 1, (const GLchar **)shader_source, NULL);
 		glCompileShader(shader);
 
 		glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
 
 		if(!status) {
 			glGetShaderInfoLog(shader, sizeof(log), &length, log);
-			shader_print_errors("compile", log, shaders[i].source);
+			shader_print_errors("compile", log, shaderSource.c_str());
 			return 0;
 		}
 
@@ -79,12 +84,12 @@ static int bind_shader(const char *fragment_shader, const char *vertex_shader)
 
 	/* Link and error check. */
 	glLinkProgram(program);
-
 	glGetProgramiv(program, GL_LINK_STATUS, &status);
+
 	if(!status) {
 		glGetShaderInfoLog(program, sizeof(log), &length, log);
-		shader_print_errors("linking", log, FALLBACK_VERTEX_SHADER);
-		shader_print_errors("linking", log, FALLBACK_FRAGMENT_SHADER);
+		//shader_print_errors("linking", log, shader_source);
+		//shader_print_errors("linking", log, shader_source);
 		return 0;
 	}
 
@@ -94,21 +99,21 @@ static int bind_shader(const char *fragment_shader, const char *vertex_shader)
 static void bind_master_shader(void)
 {
 	TIMEIT_START(master);
-	sleep(2);
+	bind_shader("shaders/master.fp", "shaders/master.vp");
 	TIMEIT_END(master);
 };
 
 static void bind_eevee_shader(void)
 {
 	TIMEIT_START(eevee);
-	sleep(1);
+	bind_shader("shaders/eevee.fp", "shaders/eevee.vp");
 	TIMEIT_END(eevee);
 };
 
 static void bind_fallback_shader(void)
 {
 	TIMEIT_START(control);
-	bind_shader(FALLBACK_FRAGMENT_SHADER, FALLBACK_VERTEX_SHADER);
+	bind_shader("shaders/control.fp", "shaders/control.vp");
 	TIMEIT_END(control);
 }
 
@@ -186,8 +191,6 @@ int main (int argc, char ** argv){
 	glClearColor (2, 0.5, 0, 1);
 	glClear (GL_COLOR_BUFFER_BIT);
 	glXSwapBuffers (dpy, win);
-
-	sleep(1);
  
 	ctx = glXGetCurrentContext(); 
 	glXDestroyContext(dpy, ctx); 

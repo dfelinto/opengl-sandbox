@@ -3,6 +3,9 @@
 
 #include <unistd.h>
 #include <sys/time.h>
+#include <iostream>
+#include <fstream>
+#include <cstdlib>
 
 double PIL_check_seconds_timer(void) 
 {
@@ -62,6 +65,17 @@ void PIL_sleep_ms(int ms)
 		fflush(stdout);                                                       \
 	} (void)0
 
-
+bool readFileIntoString( const std::string &fileName, std::string &destination ) {
+    std::ifstream in( fileName, std::ios::in | std::ios::binary );
+    if ( in ) {
+        in.seekg( 0, std::ios::end );
+        destination.resize( in.tellg() );
+        in.seekg( 0, std::ios::beg );
+        in.read( &destination[ 0 ], destination.size() );
+        in.close();
+        return true;
+    }
+    return false;
+}
 
 #endif /* __UTILS__ */
