@@ -14,12 +14,12 @@ make
 How to run it?
 ----------------
 ```
-./hello
+__GL_SHADER_DISK_CACHE=0 ./hello
 ```
 
 Results
 ----------------
-In a Radeon RX 470/480: Gallium 0.4 on AMD POLARIS10 (DRM 3.9.0 / 4.10.0-24-generic, LLVM 4.0.0)
+In Linux with an AMD Radeon RX480 running Mesa (Gallium 0.4 - 4.10.0-24-generic) we get:
 ```
 Version: 4.5
 Core profile: 1
@@ -30,15 +30,28 @@ time end   (master): 0.088870  hello.cpp:103
 time start (eevee):  hello.cpp:108
 time end   (eevee): 0.189856  hello.cpp:110
 ```
-
 That means Eevee shader compilation is taken 2x as much as master shaders.
 And those ~200ms means there is a big lag every time the shader is recompiled (e.g., when the user drags a slider in a node).
 
 Running from within Blender I get a similar result, so this sandbox seems well representative of the real production environment.
 
+In a NVIDIA Quadro K6000, proprietary driver 375.39 I get:
+```
+Version: 3.3
+Core profile: 1
+time start (control):  hello.cpp:115
+time end   (control): 0.032880  hello.cpp:117
+time start (master):  hello.cpp:101
+time end   (master): 0.063129  hello.cpp:103
+time start (eevee):  hello.cpp:108
+time end   (eevee): 0.320869  hello.cpp:110
+```
+
+Now that's more interesting. While the master shader compiles faster, the eevee one compiles considerably slower.
+
 Note
 ----
-Some systems create a cache for GLSL compiled shaders. So be sure to delete the cache after different runs of this program.
+Some systems create a cache for GLSL compiled shaders. So be sure to delete the cache after different runs of this program. Or to use the __GL_SHADER_DISK_CACHE=0 environment value before running, as suggested in the run section of this document.
 
 License
 -------
