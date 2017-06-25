@@ -60,9 +60,13 @@ int main (int argc, char ** argv){
  
 
 		//glColor4f(1.0, 0.0, 0.0, 1.0);
-		glLineStipple(3, 0xAAAA);
+		//glLineStipple(3, 0xAAAA);
+		GLint pro;
+		//glGetIntegerv(GL_CURRENT_PROGRAM, &pro);
+		glGetIntegerv(GL_ACTIVE_PROGRAM, &pro);
 		error = glGetError();
-		std::cout << "Error ? " << error << " " << GL_INVALID_OPERATION
+		std::cout << "Error ? " << error << " " << GL_INVALID_OPERATION <<
+				" " << GL_INVALID_ENUM
 				<< std::endl;
  
 		glClearColor (2, 0.5, 0, 1);
