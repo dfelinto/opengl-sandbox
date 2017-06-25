@@ -1,0 +1,62 @@
+#version 330
+#extension GL_ARB_texture_query_lod: enable
+#define GPU_ATI
+#define CLIP_WORKAROUND
+#define BUMP_BICUBIC
+#define EEVEE_ENGINE
+#define MAX_PROBE 128
+#define MAX_GRID 64
+#define MAX_PLANAR 16
+#define MAX_LIGHT 128
+#define MAX_SHADOW_CUBE 42
+#define MAX_SHADOW_MAP 64
+#define MAX_SHADOW_CASCADE 8
+#define MAX_CASCADE_NUM 4
+#define IRRADIANCE_HL2
+#define MESH_SHADER
+#define USE_BENT_NORMAL
+
+#define ATTRIB
+uniform mat3 NormalMatrix;
+void pass_attrib(in vec3 position) {
+}
+
+uniform mat4 ModelViewProjectionMatrix;
+uniform mat4 ModelMatrix;
+uniform mat4 ModelViewMatrix;
+uniform mat3 WorldNormalMatrix;
+#ifndef ATTRIB
+uniform mat3 NormalMatrix;
+#endif
+
+in vec3 pos;
+in vec3 nor;
+
+out vec3 worldPosition;
+out vec3 viewPosition;
+
+/* Used for planar reflections */
+uniform vec4 ClipPlanes[1];
+
+#ifdef USE_FLAT_NORMAL
+flat out vec3 worldNormal;
+flat out vec3 viewNormal;
+#else
+out vec3 worldNormal;
+out vec3 viewNormal;
+#endif
+
+void main() {
+	gl_Position = ModelViewProjectionMatrix * vec4(pos, 1.0);
+	viewPosition = (ModelViewMatrix * vec4(pos, 1.0)).xyz;
+	worldPosition = (ModelMatrix * vec4(pos, 1.0)).xyz;
+	viewNormal = normalize(NormalMatrix * nor);
+	worldNormal = normalize(WorldNormalMatrix * nor);
+
+	/* Used for planar reflections */
+	gl_ClipDistance[0] = dot(vec4(worldPosition, 1.0), ClipPlanes[0]);
+
+#ifdef ATTRIB
+	pass_attrib(pos);
+#endif
+}
