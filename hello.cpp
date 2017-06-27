@@ -70,10 +70,8 @@ static int bind_shader(const char *fragment_shader, const char *vertex_shader)
 	program = glCreateProgram();
 
 	for (int i = 0; i < 2; i++) {
-		VERBOSE_TIMEIT_START(shader_time);
 
 		GLuint shader = glCreateShader(shaders[i].type);
-		VERBOSE_TIMEIT_VALUE_PRINT(shader_time);
 
 		/* Read shader file into one string. */
 		if (!readFileIntoString(shaders[i].filename, shaders[i].source)) {
@@ -82,7 +80,9 @@ static int bind_shader(const char *fragment_shader, const char *vertex_shader)
 		const GLchar *shader_source[] = { shaders[i].source.c_str() };
 
 		glShaderSource(shader, 1, (const GLchar **)shader_source, NULL);
+		VERBOSE_TIMEIT_START(compiling);
 		glCompileShader(shader);
+		VERBOSE_TIMEIT_END(compiling);
 
 		glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
 
@@ -93,7 +93,6 @@ static int bind_shader(const char *fragment_shader, const char *vertex_shader)
 		}
 
 		glAttachShader(program, shader);
-		VERBOSE_TIMEIT_END(shader_time);
 	}
 
 	/* Link output. */

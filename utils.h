@@ -53,7 +53,7 @@ static int time_identation = 0;
 		time_identation ++;                                                   \
 		TIME_TAB                                                              \
 		double _timeit_##var = PIL_check_seconds_timer();                     \
-		printf("time start \t " AT "\t(" #var "): \t%5.fms\n", 0.0f);         \
+		printf("time start \t " AT "\t(" #var "): \t% 5s--\n", "-");          \
 		fflush(stdout);                                                       \
 		{ (void)0
 
