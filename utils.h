@@ -53,26 +53,26 @@ static int time_identation = 0;
 		time_identation ++;                                                   \
 		TIME_TAB                                                              \
 		double _timeit_##var = PIL_check_seconds_timer();                     \
-		printf("time start \t(" #var "): \t          " AT "\n");              \
+		printf("time start \t " AT "\t(" #var "): \t%5.fms\n", 0.0f);         \
 		fflush(stdout);                                                       \
 		{ (void)0
 
 /**
  * \return the time since TIMEIT_START was called.
  */
-#define TIMEIT_VALUE(var) (float)(PIL_check_seconds_timer() - _timeit_##var)
+#define TIMEIT_VALUE(var) (float)(PIL_check_seconds_timer() - _timeit_##var) * 1000.0f
 
 #define TIMEIT_VALUE_PRINT(var)                                                 \
 	{                                                                             \
 		TIME_TAB                                                                    \
-		printf("time update \t(" #var "): \t%.6f" "  " AT "\n", TIMEIT_VALUE(var)); \
+		printf("time update \t " AT "\t(" #var "): \t%5.fms\n", TIMEIT_VALUE(var)); \
 		fflush(stdout);                                                             \
 	} (void)0
 
 #define TIMEIT_END(var)                                                         \
 		}                                                                           \
 		TIME_TAB                                                                    \
-		printf("time end \t(" #var "): \t%.6f" "  " AT "\n", TIMEIT_VALUE(var));    \
+		printf("time end \t " AT "\t(" #var "): \t%5.fms\n", TIMEIT_VALUE(var));    \
 		fflush(stdout);                                                             \
 		time_identation--;                                                          \
 	} (void)0
