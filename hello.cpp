@@ -107,8 +107,9 @@ static int bind_shader(const char *fragment_shader, const char *vertex_shader)
 
 	if(!status) {
 		glGetShaderInfoLog(program, sizeof(log), &length, log);
-		shader_print_errors("linking", log, shaders[0].source.c_str());
-		shader_print_errors("linking", log, shaders[1].source.c_str());
+		std::cerr << "Linking error" << std::endl;
+		//shader_print_errors("linking", log, shaders[0].source.c_str());
+		//shader_print_errors("linking", log, shaders[1].source.c_str());
 		return 0;
 	}
 
