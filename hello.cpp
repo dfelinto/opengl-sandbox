@@ -5,6 +5,18 @@
 #include "opengl.h"
 #include "utils.h"
 
+//#define DEBUG_VERBOSE
+
+#ifndef DEBUG_VERBOSE
+  #define VERBOSE_TIMEIT_START(x)
+  #define VERBOSE_TIMEIT_VALUE_PRINT(x)
+  #define VERBOSE_TIMEIT_END(x)
+#else
+  #define VERBOSE_TIMEIT_START TIMEIT_START
+  #define VERBOSE_TIMEIT_VALUE_PRINT TIMEIT_VALUE_PRINT
+  #define VERBOSE_TIMEIT_END TIMEIT_END
+#endif
+
 #define GLX_CONTEXT_MAJOR_VERSION_ARB		0x2091
 #define GLX_CONTEXT_MINOR_VERSION_ARB		0x2092
 typedef GLXContext (*GLXCREATECONTEXTATTRIBSARBPROC)(Display*, GLXFBConfig, GLXContext, Bool, const int*);
@@ -57,8 +69,11 @@ static int bind_shader(const char *fragment_shader, const char *vertex_shader)
 
 	program = glCreateProgram();
 
-	for(int i = 0; i < 2; i++) {
+	for (int i = 0; i < 2; i++) {
+		VERBOSE_TIMEIT_START(shader_time);
+
 		GLuint shader = glCreateShader(shaders[i].type);
+		VERBOSE_TIMEIT_VALUE_PRINT(shader_time);
 
 		/* Read shader file into one string. */
 		if (!readFileIntoString(shaders[i].filename, shaders[i].source)) {
@@ -78,13 +93,17 @@ static int bind_shader(const char *fragment_shader, const char *vertex_shader)
 		}
 
 		glAttachShader(program, shader);
+		VERBOSE_TIMEIT_END(shader_time);
 	}
 
 	/* Link output. */
 	glBindFragDataLocation(program, 0, "fragColor");
 
 	/* Link and error check. */
+	VERBOSE_TIMEIT_START(linking);
 	glLinkProgram(program);
+	VERBOSE_TIMEIT_END(linking);
+
 	glGetProgramiv(program, GL_LINK_STATUS, &status);
 
 	if(!status) {

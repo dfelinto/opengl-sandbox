@@ -37,14 +37,23 @@ void PIL_sleep_ms(int ms)
 	usleep(ms * 1000);
 }
 
+static int time_identation = 0;
+
 #define STRINGIFY_APPEND(a, b) "" a #b
 #define STRINGIFY(x) STRINGIFY_APPEND("", x)
 #define AT __FILE__ ":" STRINGIFY(__LINE__)
 
+#define TIME_TAB                                                          \
+		for (int _i = 0; _i < time_identation; _i++) {                        \
+			printf("\t");                                                       \
+		}
+
 #define TIMEIT_START(var)                                                 \
 	{                                                                       \
+		time_identation ++;                                                   \
+		TIME_TAB                                                              \
 		double _timeit_##var = PIL_check_seconds_timer();                     \
-		printf("time start (" #var "):  " AT "\n");                           \
+		printf("time start \t(" #var "): \t          " AT "\n");              \
 		fflush(stdout);                                                       \
 		{ (void)0
 
@@ -53,16 +62,19 @@ void PIL_sleep_ms(int ms)
  */
 #define TIMEIT_VALUE(var) (float)(PIL_check_seconds_timer() - _timeit_##var)
 
-#define TIMEIT_VALUE_PRINT(var)                                               \
-	{                                                                         \
-		printf("time update   (" #var "): %.6f" "  " AT "\n", TIMEIT_VALUE(var));\
-		fflush(stdout);                                                       \
+#define TIMEIT_VALUE_PRINT(var)                                                 \
+	{                                                                             \
+		TIME_TAB                                                                    \
+		printf("time update \t(" #var "): \t%.6f" "  " AT "\n", TIMEIT_VALUE(var)); \
+		fflush(stdout);                                                             \
 	} (void)0
 
-#define TIMEIT_END(var)                                                       \
-		}                                                                     \
-		printf("time end   (" #var "): %.6f" "  " AT "\n", TIMEIT_VALUE(var));\
-		fflush(stdout);                                                       \
+#define TIMEIT_END(var)                                                         \
+		}                                                                           \
+		TIME_TAB                                                                    \
+		printf("time end \t(" #var "): \t%.6f" "  " AT "\n", TIMEIT_VALUE(var));    \
+		fflush(stdout);                                                             \
+		time_identation--;                                                          \
 	} (void)0
 
 bool readFileIntoString( const std::string &fileName, std::string &destination ) {
