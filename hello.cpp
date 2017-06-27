@@ -5,7 +5,7 @@
 #include "opengl.h"
 #include "utils.h"
 
-//#define DEBUG_VERBOSE
+#define DEBUG_VERBOSE
 
 #ifndef DEBUG_VERBOSE
   #define VERBOSE_TIMEIT_START(x)
