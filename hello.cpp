@@ -40,15 +40,18 @@ static int bind_shader(const char *fragment_shader, const char *vertex_shader)
 	GLuint program = 0;
 
 	struct Shader {
-		const char *source;
+		const char *filename;
+		std::string source;
 		GLenum type;
 	} shaders[2] = {
 	    {
-				.source = vertex_shader,
+				.filename = vertex_shader,
+				.source = "",
 				.type = GL_VERTEX_SHADER,
 			},
 	    {
-				.source = fragment_shader,
+				.filename = fragment_shader,
+				.source = "",
 				.type = GL_FRAGMENT_SHADER,
 			}
     };
@@ -58,12 +61,11 @@ static int bind_shader(const char *fragment_shader, const char *vertex_shader)
 	for(int i = 0; i < 2; i++) {
 		GLuint shader = glCreateShader(shaders[i].type);
 
-		// Read shader file into one string
-		std::string shaderSource;
-		if ( !readFileIntoString( shaders[i].source, shaderSource ) ) {
+		/* Read shader file into one string. */
+		if (!readFileIntoString(shaders[i].filename, shaders[i].source)) {
 			return 0;
 		}
-		const GLchar *shader_source[] = { shaderSource.c_str() };
+		const GLchar *shader_source[] = { shaders[i].source.c_str() };
 
 		glShaderSource(shader, 1, (const GLchar **)shader_source, NULL);
 		glCompileShader(shader);
@@ -72,7 +74,7 @@ static int bind_shader(const char *fragment_shader, const char *vertex_shader)
 
 		if(!status) {
 			glGetShaderInfoLog(shader, sizeof(log), &length, log);
-			shader_print_errors("compile", log, shaderSource.c_str());
+			shader_print_errors("compile", log, shaders[i].source.c_str());
 			return 0;
 		}
 
@@ -88,8 +90,8 @@ static int bind_shader(const char *fragment_shader, const char *vertex_shader)
 
 	if(!status) {
 		glGetShaderInfoLog(program, sizeof(log), &length, log);
-		//shader_print_errors("linking", log, shader_source);
-		//shader_print_errors("linking", log, shader_source);
+		shader_print_errors("linking", log, shaders[0].source.c_str());
+		shader_print_errors("linking", log, shaders[1].source.c_str());
 		return 0;
 	}
 
