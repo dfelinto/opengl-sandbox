@@ -129,6 +129,13 @@ static void bind_eevee_shader(void)
 	TIMEIT_END(eevee);
 };
 
+static void bind_eevee_lean_shader(void)
+{
+	TIMEIT_START(eevee_lean);
+	bind_shader("shaders/eevee-lean.fp", "shaders/eevee.vp");
+	TIMEIT_END(eevee_lean);
+};
+
 static void bind_fallback_shader(void)
 {
 	TIMEIT_START(control);
@@ -182,16 +189,10 @@ int main (int argc, char ** argv){
 	/* cleanup the error stack */
 	glGetError();
 
-	//TIMEIT_START(shader_time);
-
 	bind_fallback_shader();
-	//TIMEIT_VALUE_PRINT(shader_time);
-
 	bind_master_shader();
-	//TIMEIT_VALUE_PRINT(shader_time);
-
 	bind_eevee_shader();
-	//TIMEIT_END(shader_time);
+	bind_eevee_lean_shader();
 
 #if 0
 	//glColor4f(1.0, 0.0, 0.0, 1.0);
