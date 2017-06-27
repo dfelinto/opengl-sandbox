@@ -136,10 +136,6 @@ int main (int argc, char ** argv){
  
 	XMapWindow (dpy, win);
  
-	//oldstyle context:
-	//	GLXContext ctx = glXCreateContext(dpy, vi, 0, GL_TRUE);
- 
-	std::cout << "glXCreateContextAttribsARB " << (void*) glXGetProcAddress((const GLubyte*)"glXCreateContextAttribsARB") << std::endl;
 	GLXCREATECONTEXTATTRIBSARBPROC glXCreateContextAttribsARB = (GLXCREATECONTEXTATTRIBSARBPROC) glXGetProcAddress((const GLubyte*)"glXCreateContextAttribsARB");
  
 	int attribs[] = {
@@ -180,6 +176,7 @@ int main (int argc, char ** argv){
 	bind_eevee_shader();
 	//TIMEIT_END(shader_time);
 
+#if 0
 	//glColor4f(1.0, 0.0, 0.0, 1.0);
 	//glLineStipple(3, 0xAAAA);
 	GLint pro;
@@ -189,6 +186,7 @@ int main (int argc, char ** argv){
 	std::cout << "Error ? " << error << " " << GL_INVALID_OPERATION <<
 			" " << GL_INVALID_ENUM
 			<< std::endl;
+#endif
 
 	glClearColor (2, 0.5, 0, 1);
 	glClear (GL_COLOR_BUFFER_BIT);
