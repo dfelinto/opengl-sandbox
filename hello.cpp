@@ -1,10 +1,9 @@
-#include "opengl.h"
 #include <unistd.h>
 #include <iostream>
 #include <sstream>
 
+#include "opengl.h"
 #include "utils.h"
-#include "shaders.h"
 
 #define GLX_CONTEXT_MAJOR_VERSION_ARB		0x2091
 #define GLX_CONTEXT_MINOR_VERSION_ARB		0x2092
