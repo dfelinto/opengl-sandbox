@@ -180,8 +180,16 @@ int main (int argc, char ** argv){
 	glGetIntegerv(GL_MINOR_VERSION, &minor);
 	glGetIntegerv(GL_CONTEXT_PROFILE_MASK, &mask);
 
+	const GLubyte* vendor = glGetString(GL_VENDOR);
+	const GLubyte* renderer = glGetString(GL_RENDERER);
+	const GLubyte* version = glGetString(GL_VERSION);
+
 	std::cout << "Version: " << major << "." << minor << std::endl;
 	std::cout << "Core profile: " << (mask & GLX_CONTEXT_CORE_PROFILE_BIT_ARB) << std::endl;
+
+	std::cout << "Vendor: " << vendor << std::endl;
+	std::cout << "Renderer: " << renderer << std::endl;
+	std::cout << "Version: " << version << std::endl;
  
 	glClearColor (0, 0.5, 1, 1);
 	glClear (GL_COLOR_BUFFER_BIT);
