@@ -2,8 +2,7 @@ OpenGL SandBox
 ==============
 
 Getting a sandbox-like environment for OpenGL debugging.
-For now I'm profiling shaders in *master* and *blender2.8* branches of Blender.
-Originally I was using this for testing the setup of OpenGL core profile.
+For this particular branch we are testing downsample of mipmap.
 
 How to build it?
 ----------------
