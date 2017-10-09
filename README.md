@@ -29,4 +29,4 @@ Details
 -------
 ![Buggy image](http://www.dalaifelinto.com/ftp/opengl-vega-details.png)
 
-Here is the bug visually explained. The issue starts when mipmap is 16 or lower.
+Rendering to individual mipmap seems fine as this apitrace screenshot suggests. However the sampling of any mip equal or smaller than 16x16 pixels is giving garbage output. This does not appear if texture is GL_RGBA32F.
