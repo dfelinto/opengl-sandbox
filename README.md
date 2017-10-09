@@ -24,3 +24,9 @@ Expected results
 Buggy results
 -------------
 ![Buggy image](http://www.dalaifelinto.com/ftp/opengl-vega-bug.png)
+
+Details
+-------
+![Buggy image](http://www.dalaifelinto.com/ftp/opengl-vega-details.png)
+
+Here is the bug visually explained. The issue starts when mipmap is 16 or lower.
