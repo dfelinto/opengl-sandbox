@@ -80,9 +80,7 @@ static int bind_shader(const char *fragment_shader, const char *vertex_shader)
 		const GLchar *shader_source[] = { shaders[i].source.c_str() };
 
 		glShaderSource(shader, 1, (const GLchar **)shader_source, NULL);
-		VERBOSE_TIMEIT_START(compiling);
 		glCompileShader(shader);
-		VERBOSE_TIMEIT_END(compiling);
 
 		glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
 
@@ -99,50 +97,34 @@ static int bind_shader(const char *fragment_shader, const char *vertex_shader)
 	glBindFragDataLocation(program, 0, "fragColor");
 
 	/* Link and error check. */
-	VERBOSE_TIMEIT_START(linking);
 	glLinkProgram(program);
-	VERBOSE_TIMEIT_END(linking);
-
 	glGetProgramiv(program, GL_LINK_STATUS, &status);
 
 	if(!status) {
 		glGetShaderInfoLog(program, sizeof(log), &length, log);
 		std::cerr << "Linking error" << std::endl;
-		//shader_print_errors("linking", log, shaders[0].source.c_str());
-		//shader_print_errors("linking", log, shaders[1].source.c_str());
+		shader_print_errors("linking", log, shaders[0].source.c_str());
+		shader_print_errors("linking", log, shaders[1].source.c_str());
 		return 0;
 	}
 
 	return program;
 }
 
-static void bind_master_shader(void)
+static int compile_shader_init(void)
 {
-	TIMEIT_START(master);
-	bind_shader("shaders/master.fp", "shaders/master.vp");
-	TIMEIT_END(master);
+	return bind_shader("shaders/init.fp", "shaders/fullscreen.vp");
 };
 
-static void bind_eevee_shader(void)
+static int compile_shader_display(void)
 {
-	TIMEIT_START(eevee);
-	bind_shader("shaders/eevee.fp", "shaders/eevee.vp");
-	TIMEIT_END(eevee);
+	return bind_shader("shaders/display.fp", "shaders/fullscreen.vp");
 };
 
-static void bind_eevee_lean_shader(void)
+static int compile_shader_downsample(void)
 {
-	TIMEIT_START(eevee_lean);
-	bind_shader("shaders/eevee-lean.fp", "shaders/eevee.vp");
-	TIMEIT_END(eevee_lean);
+	return bind_shader("shaders/downsample.fp", "shaders/fullscreen.vp");
 };
-
-static void bind_fallback_shader(void)
-{
-	TIMEIT_START(control);
-	bind_shader("shaders/control.fp", "shaders/control.vp");
-	TIMEIT_END(control);
-}
 
 int main (int argc, char ** argv){
 	Display *dpy = XOpenDisplay(0);
@@ -157,9 +139,9 @@ int main (int argc, char ** argv){
 	swa.colormap = XCreateColormap(dpy, RootWindow(dpy, vi->screen), vi->visual, AllocNone);
 	swa.border_pixel = 0;
 	swa.event_mask = StructureNotifyMask;
-	Window win = XCreateWindow(dpy, RootWindow(dpy, vi->screen), 0, 0, 100, 100, 0, vi->depth, InputOutput, vi->visual, CWBorderPixel|CWColormap|CWEventMask, &swa);
+	Window win = XCreateWindow(dpy, RootWindow(dpy, vi->screen), 0, 0, 512, 512, 0, vi->depth, InputOutput, vi->visual, CWBorderPixel|CWColormap|CWEventMask, &swa);
  
-	XMapWindow (dpy, win);
+	XMapWindow(dpy, win);
  
 	GLXCREATECONTEXTATTRIBSARBPROC glXCreateContextAttribsARB = (GLXCREATECONTEXTATTRIBSARBPROC) glXGetProcAddress((const GLubyte*)"glXCreateContextAttribsARB");
  
@@ -171,7 +153,7 @@ int main (int argc, char ** argv){
  
 	GLXContext ctx = glXCreateContextAttribsARB(dpy, *fbc, 0, true, attribs);
  
-	glXMakeCurrent (dpy, win, ctx);
+	glXMakeCurrent(dpy, win, ctx);
 
 	int major, minor, mask;
 	int error;
@@ -191,34 +173,106 @@ int main (int argc, char ** argv){
 	std::cout << "Renderer: " << renderer << std::endl;
 	std::cout << "Version: " << version << std::endl;
  
-	glClearColor (0, 0.5, 1, 1);
-	glClear (GL_COLOR_BUFFER_BIT);
-	glXSwapBuffers (dpy, win);
+	// -------- Fullscreen tri ----------- //
+    float vertices[] = {
+	     -1.0f, -1.0f,
+	     -1.0f,  3.0f,
+	      3.0f, -1.0f,
+    };
+    unsigned int vbo, vao;
+    glGenVertexArrays(1, &vao);
+    glGenBuffers(1, &vbo);
+    glBindVertexArray(vao);
+
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+
+    // -------- Texture ----------- //
+    unsigned int tex;
+    unsigned int tex_size = 64;
+	glGenTextures(1, &tex);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, tex);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_R11F_G11F_B10F, tex_size, tex_size, 0, GL_RGBA, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 2);
+	glGenerateMipmap(GL_TEXTURE_2D);
+
+	// --------- Framebuffers ---------- //
+    unsigned int fbo;
+	glGenFramebuffers(1, &fbo);
+
+	// ---------- Shaders --------- //
+	int init_sh = compile_shader_init();
+	int display_sh = compile_shader_display();
+	int downsample_sh = compile_shader_downsample();
+
+	// - WAIT - //
+	sleep(1);
+
+	// -------- DRAW --------------//
+	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
+	glDisable(GL_DEPTH_TEST);
+
+	glUseProgram(init_sh);
+
+    // MIP 0
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex, 0);
+	glBindVertexArray(vao);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+
+	glUseProgram(downsample_sh);
+	glUniform1i(0, 0);
+
+    // MIP 1
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex, 1);
+	glBindVertexArray(vao);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+
+    // MIP 2
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 1);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 1);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex, 2);
+	glBindVertexArray(vao);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+
+    // Reset
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 2);
+
+    // ---------- DRAW TO OUTPUT ---------- //
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	glDisable(GL_DEPTH_TEST);
+	glUseProgram(display_sh);
+	glUniform1i(0, 0);
+	glBindVertexArray(vao);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+
 
 	/* cleanup the error stack */
-	glGetError();
+	if (glGetError()) {
+		printf("ERROR\n");
+	};
 
-	bind_fallback_shader();
-	bind_master_shader();
-	bind_eevee_shader();
-	bind_eevee_lean_shader();
-
-#if 0
-	//glColor4f(1.0, 0.0, 0.0, 1.0);
-	//glLineStipple(3, 0xAAAA);
-	GLint pro;
-	//glGetIntegerv(GL_CURRENT_PROGRAM, &pro);
-	glGetIntegerv(GL_ACTIVE_PROGRAM, &pro);
-	error = glGetError();
-	std::cout << "Error ? " << error << " " << GL_INVALID_OPERATION <<
-			" " << GL_INVALID_ENUM
-			<< std::endl;
-#endif
-
-	glClearColor (2, 0.5, 0, 1);
-	glClear (GL_COLOR_BUFFER_BIT);
-	glXSwapBuffers (dpy, win);
+	glXSwapBuffers(dpy, win);
  
-	ctx = glXGetCurrentContext(); 
+	ctx = glXGetCurrentContext();
+	sleep(5);	
 	glXDestroyContext(dpy, ctx); 
 	}
